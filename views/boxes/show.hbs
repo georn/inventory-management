@@ -1,0 +1,13 @@
+<h1>Box Details</h1>
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">{{box.name}}</h5>
+    <p class="card-text"><strong>Contents:</strong> {{box.contents}}</p>
+    <p class="card-text"><strong>Location:</strong> {{box.location}}</p>
+    <p class="card-text"><strong>QR Code:</strong> <img src="{{box.qrCode}}" alt="QR Code"></p>
+  </div>
+</div>
+
+<a href="/boxes/{{box.id}}/edit" class="btn btn-warning mt-3">Edit</a>
+<a href="/boxes" class="btn btn-secondary mt-3">Back to List</a>

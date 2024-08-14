@@ -1,0 +1,17 @@
+<h1>Add New Box</h1>
+
+<form action="/boxes" method="POST">
+  <div class="mb-3">
+    <label for="name" class="form-label">Name</label>
+    <input type="text" class="form-control" id="name" name="name" required>
+  </div>
+  <div class="mb-3">
+    <label for="contents" class="form-label">Contents</label>
+    <textarea class="form-control" id="contents" name="contents" required></textarea>
+  </div>
+  <div class="mb-3">
+    <label for="location" class="form-label">Location</label>
+    <input type="text" class="form-control" id="location" name="location" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Create Box</button>
+</form>

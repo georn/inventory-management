@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "name": "Updated Kitchen Supplies",
+    "contents": "Pots, pans, utensils, plates",
+    "location": "Dining Room",
+    "id": "1723642459763",
+    "qrCode": "https://yourapp.com/boxes/1723642459763"
+  }
+]

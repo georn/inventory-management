@@ -1,0 +1,33 @@
+<h1>Boxes</h1>
+
+<table class="table">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Contents</th>
+    <th>Location</th>
+    <th>Actions</th>
+  </tr>
+  </thead>
+  <tbody>
+  {{#each boxes}}
+    <tr>
+      <td>{{this.id}}</td>
+      <td>{{this.name}}</td>
+      <td>{{this.contents}}</td>
+      <td>{{this.location}}</td>
+      <td>
+        <a href="/boxes/{{this.id}}" class="btn btn-sm btn-info">View</a>
+        <a href="/boxes/{{this.id}}/edit" class="btn btn-sm btn-warning">Edit</a>
+        <form action="/boxes/{{this.id}}" method="POST" style="display: inline;">
+          <input type="hidden" name="_method" value="DELETE">
+          <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+        </form>
+      </td>
+    </tr>
+  {{/each}}
+  </tbody>
+</table>
+
+<a href="/boxes/new" class="btn btn-primary">Add New Box</a>

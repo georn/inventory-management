@@ -1,0 +1,18 @@
+<h1>Edit Box</h1>
+
+<form action="/boxes/{{box.id}}" method="POST">
+  <input type="hidden" name="_method" value="PUT">
+  <div class="mb-3">
+    <label for="name" class="form-label">Name</label>
+    <input type="text" class="form-control" id="name" name="name" value="{{box.name}}" required>
+  </div>
+  <div class="mb-3">
+    <label for="contents" class="form-label">Contents</label>
+    <textarea class="form-control" id="contents" name="contents" required>{{box.contents}}</textarea>
+  </div>
+  <div class="mb-3">
+    <label for="location" class="form-label">Location</label>
+    <input type="text" class="form-control" id="location" name="location" value="{{box.location}}" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Update Box</button>
+</form>

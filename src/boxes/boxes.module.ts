@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { BoxesController } from './boxes.controller';
+import { BoxesViewController } from './boxes-view.controller';
+import { BoxesApiController } from './boxes-api.controller';
 import { BoxesService } from './boxes.service';
 
 @Module({
-  controllers: [BoxesController],
+  controllers: [BoxesViewController, BoxesApiController],
   providers: [BoxesService],
   exports: [BoxesService],
 })
