@@ -67,8 +67,7 @@
     "typescript": "^5.1.3"
   },
   "engines": {
-    "node": "20",
-    "npm": "10.8.1"
+    "node": "20"
   },
   "jest": {
     "moduleFileExtensions": [
