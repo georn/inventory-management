@@ -5,6 +5,6 @@ export default () => ({
     path: process.env.DATABASE_FILE_PATH || 'data/boxes.json',
   },
   qrCode: {
-    baseUrl: process.env.QR_CODE_BASE_URL || 'https://yourapp.com/boxes/',
+    baseUrl: process.env.QR_CODE_BASE_URL || 'http://localhost:3000/boxes/',
   },
 });
