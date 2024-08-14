@@ -1,0 +1,126 @@
+name: CI and Release Workflow Test
+
+on:
+  workflow_dispatch: # Manual trigger only
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.11.0'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run build
+        run: npm run build
+
+      # Uncomment if you have tests
+      # - name: Run tests
+      #   run: npm test
+
+  create-release:
+    if: github.event_name == 'workflow_dispatch'
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.11.0'
+
+      - name: Bump version for release
+        id: bump-version
+        run: |
+          git checkout development
+          current_version=$(grep -Po '(?<="version": ")[^"]*' package.json)
+          release_version=${current_version/-SNAPSHOT/}
+          echo "release_version=$release_version" >> $GITHUB_ENV
+          sed -i 's/"version": "'"$current_version"'"/"version": "'"$release_version"'"/' package.json
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add package.json
+          git commit -m "Release version $release_version"
+
+      - name: Push release commit to development
+        run: |
+          git push origin development
+
+      - name: Create release tag
+        run: |
+          git tag -a v${{ env.release_version }} -m "Release ${{ env.release_version }}"
+          git push origin v${{ env.release_version }}
+
+      - name: Update pre branch
+        run: |
+          git checkout pre
+          git reset --hard origin/pre
+          git merge --ff-only development
+          git push origin pre
+
+      - name: Create a release on GitHub
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.release_version }}
+          release_name: Release ${{ env.release_version }}
+          draft: false
+          prerelease: false
+
+  bump-development-version:
+    runs-on: ubuntu-latest
+    needs: create-release
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Fetch and rebase development
+        run: |
+          git fetch origin development
+          git checkout development
+          git rebase origin/development
+
+      - name: Bump development version
+        run: |
+          release_version=$(grep -Po '(?<="version": ")[^"]*' package.json)
+          major_version=$(echo $release_version | awk -F. '{print $1}')
+          minor_version=$(echo $release_version | awk -F. '{print $2}')
+          new_minor_version=$(($minor_version + 1))
+          new_dev_version="$major_version.$new_minor_version.0-SNAPSHOT"
+          sed -i 's/"version": "'"$release_version"'"/"version": "'"$new_dev_version"'"/' package.json
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add package.json
+          git commit -m "Bump version to $new_dev_version"
+
+      - name: Push changes
+        run: |
+          git push origin development || (git pull --rebase origin development && git push origin development)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

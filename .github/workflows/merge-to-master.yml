@@ -1,0 +1,43 @@
+name: Merge to Master
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmMerge:
+        description: 'Type YES to confirm merging pre into master'
+        required: true
+
+jobs:
+  merge-to-master:
+    if: github.event.inputs.confirmMerge == 'YES'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Merge pre into master
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git checkout master
+          git pull origin master
+          git merge origin/pre --ff-only
+          git push origin master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request if fast-forward fails
+        if: failure()
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: merge-pre-to-master
+          base: master
+          title: 'Fast-forward merge from pre to master failed'
+          body: 'This PR was automatically created because the fast-forward merge from pre to master failed. This likely means that master-test has diverged from pre-test. Please review the changes, resolve any conflicts if necessary, and merge manually.'
