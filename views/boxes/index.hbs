@@ -1,33 +1,23 @@
-<h1>Boxes</h1>
+<h1 class="text-2xl font-bold mb-6">Boxes</h1>
 
-<table class="table">
-  <thead>
-  <tr>
-    <th>ID</th>
-    <th>Name</th>
-    <th>Contents</th>
-    <th>Location</th>
-    <th>Actions</th>
-  </tr>
-  </thead>
-  <tbody>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
   {{#each boxes}}
-    <tr>
-      <td>{{this.id}}</td>
-      <td>{{this.name}}</td>
-      <td>{{this.contents}}</td>
-      <td>{{this.location}}</td>
-      <td>
-        <a href="/boxes/{{this.id}}" class="btn btn-sm btn-info">View</a>
-        <a href="/boxes/{{this.id}}/edit" class="btn btn-sm btn-warning">Edit</a>
-        <form action="/boxes/{{this.id}}" method="POST" style="display: inline;">
-          <input type="hidden" name="_method" value="DELETE">
-          <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-        </form>
-      </td>
-    </tr>
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <div class="p-4">
+        <h2 class="text-xl font-semibold mb-2">{{this.name}}</h2>
+        <p class="text-gray-600 mb-2"><strong>Contents:</strong> {{this.contents}}</p>
+        <p class="text-gray-600 mb-4"><strong>Location:</strong> {{this.location}}</p>
+        <div class="flex justify-between">
+          <a href="/boxes/{{this.id}}" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded">View</a>
+          <a href="/boxes/{{this.id}}/edit" class="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded">Edit</a>
+          <form action="/boxes/{{this.id}}" method="POST" class="inline">
+            <input type="hidden" name="_method" value="DELETE">
+            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded" onclick="return confirm('Are you sure?')">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
   {{/each}}
-  </tbody>
-</table>
+</div>
 
-<a href="/boxes/new" class="btn btn-primary">Add New Box</a>
+<a href="/boxes/new" class="mt-6 inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">Add New Box</a>

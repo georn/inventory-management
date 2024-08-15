@@ -1,18 +1,20 @@
-<h1>Edit Box</h1>
+<h1 class="text-2xl font-bold mb-6">Edit Box</h1>
 
-<form action="/boxes/{{box.id}}" method="POST">
+<form action="/boxes/{{box.id}}" method="POST" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
   <input type="hidden" name="_method" value="PUT">
-  <div class="mb-3">
-    <label for="name" class="form-label">Name</label>
-    <input type="text" class="form-control" id="name" name="name" value="{{box.name}}" required>
+  <div class="mb-4">
+    <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Name</label>
+    <input type="text" id="name" name="name" value="{{box.name}}" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
   </div>
-  <div class="mb-3">
-    <label for="contents" class="form-label">Contents</label>
-    <textarea class="form-control" id="contents" name="contents" required>{{box.contents}}</textarea>
+  <div class="mb-4">
+    <label for="contents" class="block text-gray-700 text-sm font-bold mb-2">Contents</label>
+    <textarea id="contents" name="contents" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-32">{{box.contents}}</textarea>
   </div>
-  <div class="mb-3">
-    <label for="location" class="form-label">Location</label>
-    <input type="text" class="form-control" id="location" name="location" value="{{box.location}}" required>
+  <div class="mb-6">
+    <label for="location" class="block text-gray-700 text-sm font-bold mb-2">Location</label>
+    <input type="text" id="location" name="location" value="{{box.location}}" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
   </div>
-  <button type="submit" class="btn btn-primary">Update Box</button>
+  <div class="flex items-center justify-between">
+    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Update Box</button>
+  </div>
 </form>

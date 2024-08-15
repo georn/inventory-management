@@ -1,14 +1,18 @@
-<h1>Box Details</h1>
+<h1 class="text-2xl font-bold mb-6">Box Details</h1>
 
-<div class="card">
-  <div class="card-body">
-    <h5 class="card-title">{{box.name}}</h5>
-    <p class="card-text"><strong>Contents:</strong> {{box.contents}}</p>
-    <p class="card-text"><strong>Location:</strong> {{box.location}}</p>
-    <p class="card-text"><strong>QR Code:</strong></p>
-    <img src="{{box.qrCode}}" alt="QR Code for {{box.name}}">
+<div class="bg-white shadow-md rounded-lg overflow-hidden">
+  <div class="p-6">
+    <h2 class="text-xl font-semibold mb-4">{{box.name}}</h2>
+    <p class="text-gray-600 mb-2"><strong>Contents:</strong> {{box.contents}}</p>
+    <p class="text-gray-600 mb-4"><strong>Location:</strong> {{box.location}}</p>
+    <div class="mt-6">
+      <h3 class="text-lg font-semibold mb-2">QR Code:</h3>
+      <img src="{{box.qrCode}}" alt="QR Code for {{box.name}}" class="max-w-xs">
+    </div>
   </div>
 </div>
 
-<a href="/boxes/{{box.id}}/edit" class="btn btn-warning mt-3">Edit</a>
-<a href="/boxes" class="btn btn-secondary mt-3">Back to List</a>
+<div class="mt-6 space-x-4">
+  <a href="/boxes/{{box.id}}/edit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded">Edit</a>
+  <a href="/boxes" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Back to List</a>
+</div>
