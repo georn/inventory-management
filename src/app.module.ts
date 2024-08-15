@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import configuration from './config/configuration';
 import { BoxesModule } from './boxes/boxes.module';
 import { HealthModule } from './health/health.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UserIdentificationMiddleware } from './common/middleware/user-identification.middleware';
+import configuration from './config/configuration';
 
 @Module({
   imports: [
@@ -18,4 +19,8 @@ import { AppService } from './app.service';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(UserIdentificationMiddleware).forRoutes('*');
+  }
+}

@@ -7,7 +7,9 @@ import {
   Body,
   Param,
   NotFoundException,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { BoxesService } from './boxes.service';
 import { CreateBoxDto } from './dto/create-box.dto';
 import { UpdateBoxDto } from './dto/update-box.dto';
@@ -17,13 +19,15 @@ export class BoxesApiController {
   constructor(private readonly boxesService: BoxesService) {}
 
   @Get()
-  async findAll() {
-    return this.boxesService.findAll();
+  async findAll(@Req() req: Request) {
+    const userId = req['userId'];
+    return this.boxesService.findAll(userId);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const box = await this.boxesService.findOne(id);
+  async findOne(@Req() req: Request, @Param('id') id: string) {
+    const userId = req['userId'];
+    const box = await this.boxesService.findOne(userId, id);
     if (!box) {
       throw new NotFoundException(`Box with ID ${id} not found`);
     }
@@ -31,13 +35,19 @@ export class BoxesApiController {
   }
 
   @Post()
-  async create(@Body() createBoxDto: CreateBoxDto) {
-    return this.boxesService.create(createBoxDto);
+  async create(@Req() req: Request, @Body() createBoxDto: CreateBoxDto) {
+    const userId = req['userId'];
+    return this.boxesService.create(userId, createBoxDto);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateBoxDto: UpdateBoxDto) {
-    const updatedBox = await this.boxesService.update(id, updateBoxDto);
+  async update(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() updateBoxDto: UpdateBoxDto,
+  ) {
+    const userId = req['userId'];
+    const updatedBox = await this.boxesService.update(userId, id, updateBoxDto);
     if (!updatedBox) {
       throw new NotFoundException(`Box with ID ${id} not found`);
     }
@@ -45,8 +55,9 @@ export class BoxesApiController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const deleted = await this.boxesService.remove(id);
+  async remove(@Req() req: Request, @Param('id') id: string) {
+    const userId = req['userId'];
+    const deleted = await this.boxesService.remove(userId, id);
     if (!deleted) {
       throw new NotFoundException(`Box with ID ${id} not found`);
     }

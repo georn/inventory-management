@@ -4,6 +4,7 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import * as methodOverride from 'method-override';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -17,6 +18,7 @@ async function bootstrap() {
   app.setViewEngine('hbs');
 
   app.use(methodOverride('_method'));
+  app.use(cookieParser());
 
   const configService = app.get(ConfigService);
   const port = configService.get<number>('port');

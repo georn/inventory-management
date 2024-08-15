@@ -7,9 +7,14 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as QRCode from 'qrcode';
 
+interface UserData {
+  userId: string;
+  boxes: Box[];
+}
+
 @Injectable()
 export class BoxesService {
-  private boxes: Box[] = [];
+  private userData: UserData[] = [];
   private readonly dataFile: string;
 
   constructor(private configService: ConfigService) {
@@ -20,86 +25,154 @@ export class BoxesService {
   }
 
   async onModuleInit() {
-    await this.loadBoxes();
+    await this.loadUserData();
   }
 
-  private async loadBoxes() {
+  private async loadUserData() {
     try {
       const data = await fs.readFile(this.dataFile, 'utf8');
-      this.boxes = JSON.parse(data);
+      this.userData = JSON.parse(data);
     } catch (error) {
-      this.boxes = [];
+      this.userData = [];
     }
   }
 
-  private async saveBoxes() {
-    await fs.writeFile(this.dataFile, JSON.stringify(this.boxes, null, 2));
+  private async saveUserData() {
+    await fs.writeFile(this.dataFile, JSON.stringify(this.userData, null, 2));
   }
 
-  async findAll(): Promise<Box[]> {
-    return this.boxes;
+  async findAll(userId: string): Promise<Box[]> {
+    let userDataIndex = this.userData.findIndex(data => data.userId === userId);
+
+    if (userDataIndex === -1) {
+      // New user, create sample boxes
+      const sampleBoxes = await this.createSampleBoxes();
+      this.userData.push({ userId, boxes: sampleBoxes });
+      userDataIndex = this.userData.length - 1;
+      await this.saveUserData();
+    }
+
+    return this.userData[userDataIndex].boxes;
   }
 
-  async findOne(id: string): Promise<Box | undefined> {
-    return this.boxes.find((box) => box.id === id);
+  private async createSampleBoxes(): Promise<Box[]> {
+    const sampleBoxes: Box[] = [
+      {
+        id: Date.now().toString(),
+        name: 'Kitchen Supplies',
+        contents: 'Pots, pans, utensils',
+        location: 'Kitchen',
+        qrCode: '',
+      },
+      {
+        id: (Date.now() + 1).toString(),
+        name: 'Books',
+        contents: 'Novels, textbooks',
+        location: 'Living Room',
+        qrCode: '',
+      },
+      {
+        id: (Date.now() + 2).toString(),
+        name: 'Tools',
+        contents: 'Hammer, screwdrivers, nails',
+        location: 'Garage',
+        qrCode: '',
+      },
+    ];
+
+    // Generate QR codes for sample boxes
+    for (const box of sampleBoxes) {
+      box.qrCode = await this.generateQRCode(box);
+    }
+
+    return sampleBoxes;
   }
 
-  async create(createBoxDto: CreateBoxDto): Promise<Box> {
+  async findOne(userId: string, id: string): Promise<Box | undefined> {
+    const userDataIndex = this.userData.findIndex(
+      (data) => data.userId === userId,
+    );
+    return userDataIndex !== -1
+      ? this.userData[userDataIndex].boxes.find((box) => box.id === id)
+      : undefined;
+  }
+
+  async create(userId: string, createBoxDto: CreateBoxDto): Promise<Box> {
     const id = Date.now().toString();
     const newBox: Box = {
       ...createBoxDto,
       id,
-      qrCode: '', // We'll generate this next
+      qrCode: '', // Initialize with an empty string
     };
 
+    // Generate QR code after creating the full Box object
     newBox.qrCode = await this.generateQRCode(newBox);
 
-    this.boxes.push(newBox);
-    await this.saveBoxes();
+    const userDataIndex = this.userData.findIndex(
+      (data) => data.userId === userId,
+    );
+    if (userDataIndex !== -1) {
+      this.userData[userDataIndex].boxes.push(newBox);
+    } else {
+      this.userData.push({ userId, boxes: [newBox] });
+    }
+
+    await this.saveUserData();
     return newBox;
   }
 
   async update(
+    userId: string,
     id: string,
     updateBoxDto: UpdateBoxDto,
   ): Promise<Box | undefined> {
-    const index = this.boxes.findIndex((b) => b.id === id);
-    if (index !== -1) {
-      const updatedBox = { ...this.boxes[index], ...updateBoxDto };
-      updatedBox.qrCode = await this.generateQRCode(updatedBox);
-
-      this.boxes[index] = updatedBox;
-      await this.saveBoxes();
-      return updatedBox;
+    const userDataIndex = this.userData.findIndex(
+      (data) => data.userId === userId,
+    );
+    if (userDataIndex !== -1) {
+      const boxIndex = this.userData[userDataIndex].boxes.findIndex(
+        (box) => box.id === id,
+      );
+      if (boxIndex !== -1) {
+        const updatedBox = {
+          ...this.userData[userDataIndex].boxes[boxIndex],
+          ...updateBoxDto,
+        };
+        updatedBox.qrCode = await this.generateQRCode(updatedBox);
+        this.userData[userDataIndex].boxes[boxIndex] = updatedBox;
+        await this.saveUserData();
+        return updatedBox;
+      }
     }
     return undefined;
   }
 
-  async remove(id: string): Promise<boolean> {
-    const initialLength = this.boxes.length;
-    this.boxes = this.boxes.filter((box) => box.id !== id);
-    if (this.boxes.length !== initialLength) {
-      await this.saveBoxes();
-      return true;
+  async remove(userId: string, id: string): Promise<boolean> {
+    const userDataIndex = this.userData.findIndex(
+      (data) => data.userId === userId,
+    );
+    if (userDataIndex !== -1) {
+      const initialLength = this.userData[userDataIndex].boxes.length;
+      this.userData[userDataIndex].boxes = this.userData[
+        userDataIndex
+      ].boxes.filter((box) => box.id !== id);
+      if (this.userData[userDataIndex].boxes.length !== initialLength) {
+        await this.saveUserData();
+        return true;
+      }
     }
     return false;
   }
 
   private async generateQRCode(box: Box): Promise<string> {
     try {
-      // Create a new object with only the necessary data
       const qrData = {
         id: box.id,
         name: box.name,
         contents: box.contents,
         location: box.location,
       };
-
-      // Convert the object to a JSON string
-      const jsonString = JSON.stringify(qrData);
-
-      // Generate QR code
-      return await QRCode.toDataURL(jsonString);
+      return await QRCode.toDataURL(JSON.stringify(qrData));
     } catch (err) {
       console.error('Error generating QR code:', err);
       return '';

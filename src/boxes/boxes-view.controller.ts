@@ -9,7 +9,9 @@ import {
   Render,
   Redirect,
   NotFoundException,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { BoxesService } from './boxes.service';
 import { CreateBoxDto } from './dto/create-box.dto';
 import { UpdateBoxDto } from './dto/update-box.dto';
@@ -20,8 +22,9 @@ export class BoxesViewController {
 
   @Get()
   @Render('boxes/index')
-  async findAll() {
-    const boxes = await this.boxesService.findAll();
+  async findAll(@Req() req: Request) {
+    const userId = req['userId'];
+    const boxes = await this.boxesService.findAll(userId);
     return { boxes };
   }
 
@@ -33,14 +36,16 @@ export class BoxesViewController {
 
   @Post()
   @Redirect('/boxes')
-  async create(@Body() createBoxDto: CreateBoxDto) {
-    await this.boxesService.create(createBoxDto);
+  async create(@Req() req: Request, @Body() createBoxDto: CreateBoxDto) {
+    const userId = req['userId'];
+    await this.boxesService.create(userId, createBoxDto);
   }
 
   @Get(':id')
   @Render('boxes/show')
-  async findOne(@Param('id') id: string) {
-    const box = await this.boxesService.findOne(id);
+  async findOne(@Req() req: Request, @Param('id') id: string) {
+    const userId = req['userId'];
+    const box = await this.boxesService.findOne(userId, id);
     if (!box) {
       throw new NotFoundException(`Box with ID ${id} not found`);
     }
@@ -49,8 +54,9 @@ export class BoxesViewController {
 
   @Get(':id/edit')
   @Render('boxes/edit')
-  async edit(@Param('id') id: string) {
-    const box = await this.boxesService.findOne(id);
+  async edit(@Req() req: Request, @Param('id') id: string) {
+    const userId = req['userId'];
+    const box = await this.boxesService.findOne(userId, id);
     if (!box) {
       throw new NotFoundException(`Box with ID ${id} not found`);
     }
@@ -59,8 +65,9 @@ export class BoxesViewController {
 
   @Put(':id')
   @Redirect('/boxes')
-  async update(@Param('id') id: string, @Body() updateBoxDto: UpdateBoxDto) {
-    const updatedBox = await this.boxesService.update(id, updateBoxDto);
+  async update(@Req() req: Request, @Param('id') id: string, @Body() updateBoxDto: UpdateBoxDto) {
+    const userId = req['userId'];
+    const updatedBox = await this.boxesService.update(userId, id, updateBoxDto);
     if (!updatedBox) {
       throw new NotFoundException(`Box with ID ${id} not found`);
     }
@@ -68,8 +75,9 @@ export class BoxesViewController {
 
   @Delete(':id')
   @Redirect('/boxes')
-  async remove(@Param('id') id: string) {
-    const deleted = await this.boxesService.remove(id);
+  async remove(@Req() req: Request, @Param('id') id: string) {
+    const userId = req['userId'];
+    const deleted = await this.boxesService.remove(userId, id);
     if (!deleted) {
       throw new NotFoundException(`Box with ID ${id} not found`);
     }
