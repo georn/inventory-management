@@ -42,7 +42,9 @@ export class BoxesService {
   }
 
   async findAll(userId: string): Promise<Box[]> {
-    let userDataIndex = this.userData.findIndex(data => data.userId === userId);
+    let userDataIndex = this.userData.findIndex(
+      (data) => data.userId === userId,
+    );
 
     if (userDataIndex === -1) {
       // New user, create sample boxes

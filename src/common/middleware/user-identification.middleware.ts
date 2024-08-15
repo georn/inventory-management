@@ -12,11 +12,17 @@ export class UserIdentificationMiddleware implements NestMiddleware {
 
     if (!userId) {
       userId = this.generateUserId();
-      res.cookie(this.cookieName, userId, { maxAge: 365 * 24 * 60 * 60 * 1000, httpOnly: true });
+      res.cookie(this.cookieName, userId, {
+        maxAge: 365 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+      });
     }
 
     // Always set the cookie to ensure consistency
-    res.cookie(this.cookieName, userId, { maxAge: 365 * 24 * 60 * 60 * 1000, httpOnly: true });
+    res.cookie(this.cookieName, userId, {
+      maxAge: 365 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+    });
 
     req['userId'] = userId;
     next();

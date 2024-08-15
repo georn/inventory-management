@@ -16,11 +16,12 @@ import { BoxesService } from './boxes.service';
 import { CreateBoxDto } from './dto/create-box.dto';
 import { UpdateBoxDto } from './dto/update-box.dto';
 
-@Controller('boxes')
+@Controller()
 export class BoxesViewController {
   constructor(private readonly boxesService: BoxesService) {}
 
-  @Get()
+  @Get('/')
+  @Get('boxes')
   @Render('boxes/index')
   async findAll(@Req() req: Request) {
     const userId = req['userId'];
@@ -28,20 +29,20 @@ export class BoxesViewController {
     return { boxes };
   }
 
-  @Get('new')
+  @Get('boxes/new')
   @Render('boxes/new')
   newBox() {
     return {};
   }
 
-  @Post()
-  @Redirect('/boxes')
+  @Post('boxes')
+  @Redirect('/')
   async create(@Req() req: Request, @Body() createBoxDto: CreateBoxDto) {
     const userId = req['userId'];
     await this.boxesService.create(userId, createBoxDto);
   }
 
-  @Get(':id')
+  @Get('boxes/:id')
   @Render('boxes/show')
   async findOne(@Req() req: Request, @Param('id') id: string) {
     const userId = req['userId'];
@@ -52,7 +53,7 @@ export class BoxesViewController {
     return { box };
   }
 
-  @Get(':id/edit')
+  @Get('boxes/:id/edit')
   @Render('boxes/edit')
   async edit(@Req() req: Request, @Param('id') id: string) {
     const userId = req['userId'];
@@ -63,9 +64,13 @@ export class BoxesViewController {
     return { box };
   }
 
-  @Put(':id')
-  @Redirect('/boxes')
-  async update(@Req() req: Request, @Param('id') id: string, @Body() updateBoxDto: UpdateBoxDto) {
+  @Put('boxes/:id')
+  @Redirect('/')
+  async update(
+    @Req() req: Request,
+    @Param('id') id: string,
+    @Body() updateBoxDto: UpdateBoxDto,
+  ) {
     const userId = req['userId'];
     const updatedBox = await this.boxesService.update(userId, id, updateBoxDto);
     if (!updatedBox) {
@@ -73,8 +78,8 @@ export class BoxesViewController {
     }
   }
 
-  @Delete(':id')
-  @Redirect('/boxes')
+  @Delete('boxes/:id')
+  @Redirect('/')
   async remove(@Req() req: Request, @Param('id') id: string) {
     const userId = req['userId'];
     const deleted = await this.boxesService.remove(userId, id);
