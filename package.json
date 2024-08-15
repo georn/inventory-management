@@ -1,6 +1,6 @@
 {
   "name": "inventory-management",
-  "version": "0.1.0-SNAPSHOT",
+  "version": "0.1.0",
   "description": "A NestJS-based Inventory Management System that uses QR codes to track and manage the contents of boxes during a move. Includes a simple web interface for easy input and retrieval of inventory details.",
   "author": {
     "name": "georn",
