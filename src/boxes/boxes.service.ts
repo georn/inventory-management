@@ -1,126 +1,84 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Box } from './box.entity';
 import { CreateBoxDto } from './dto/create-box.dto';
 import { UpdateBoxDto } from './dto/update-box.dto';
-import * as fs from 'fs/promises';
-import * as path from 'path';
 import * as QRCode from 'qrcode';
-
-interface UserData {
-  userId: string;
-  boxes: Box[];
-}
 
 @Injectable()
 export class BoxesService {
-  private userData: UserData[] = [];
-  private readonly dataFile: string;
-
-  constructor(private configService: ConfigService) {
-    this.dataFile = path.join(
-      process.cwd(),
-      this.configService.get<string>('database.path'),
-    );
-  }
-
-  async onModuleInit() {
-    await this.loadUserData();
-  }
-
-  private async loadUserData() {
-    try {
-      const data = await fs.readFile(this.dataFile, 'utf8');
-      this.userData = JSON.parse(data);
-    } catch (error) {
-      this.userData = [];
-    }
-  }
-
-  private async saveUserData() {
-    await fs.writeFile(this.dataFile, JSON.stringify(this.userData, null, 2));
-  }
+  constructor(
+    @InjectRepository(Box)
+    private boxesRepository: Repository<Box>,
+  ) {}
 
   async findAll(userId: string): Promise<Box[]> {
-    let userDataIndex = this.userData.findIndex(
-      (data) => data.userId === userId,
-    );
-
-    if (userDataIndex === -1) {
+    const boxes = await this.boxesRepository.find({ where: { userId } });
+    
+    if (boxes.length === 0) {
       // New user, create sample boxes
-      const sampleBoxes = await this.createSampleBoxes();
-      this.userData.push({ userId, boxes: sampleBoxes });
-      userDataIndex = this.userData.length - 1;
-      await this.saveUserData();
+      return await this.createSampleBoxes(userId);
     }
 
-    return this.userData[userDataIndex].boxes;
+    return boxes;
   }
 
-  private async createSampleBoxes(): Promise<Box[]> {
-    const sampleBoxes: Box[] = [
+  private async createSampleBoxes(userId: string): Promise<Box[]> {
+    const sampleData = [
       {
-        id: Date.now().toString(),
         name: 'Kitchen Supplies',
         contents: 'Pots, pans, utensils',
         location: 'Kitchen',
-        qrCode: '',
       },
       {
-        id: (Date.now() + 1).toString(),
         name: 'Books',
         contents: 'Novels, textbooks',
         location: 'Living Room',
-        qrCode: '',
       },
       {
-        id: (Date.now() + 2).toString(),
         name: 'Tools',
         contents: 'Hammer, screwdrivers, nails',
         location: 'Garage',
-        qrCode: '',
       },
     ];
 
-    // Generate QR codes for sample boxes
-    for (const box of sampleBoxes) {
-      box.qrCode = await this.generateQRCode(box);
+    const sampleBoxes: Box[] = [];
+    for (const data of sampleData) {
+      const box = this.boxesRepository.create({
+        ...data,
+        userId,
+        qrCode: '',
+      });
+      // We need to save first to get the ID if we want to include it in the QR code, 
+      // but TypeORM with UUID generates it on creation if we use create() then save().
+      // Actually with PrimaryGeneratedColumn('uuid'), it's generated on save.
+      const savedBox = await this.boxesRepository.save(box);
+      savedBox.qrCode = await this.generateQRCode(savedBox);
+      await this.boxesRepository.save(savedBox);
+      sampleBoxes.push(savedBox);
     }
 
     return sampleBoxes;
   }
 
   async findOne(userId: string, id: string): Promise<Box | undefined> {
-    const userDataIndex = this.userData.findIndex(
-      (data) => data.userId === userId,
-    );
-    return userDataIndex !== -1
-      ? this.userData[userDataIndex].boxes.find((box) => box.id === id)
-      : undefined;
+    return await this.boxesRepository.findOne({ where: { id, userId } });
   }
 
   async create(userId: string, createBoxDto: CreateBoxDto): Promise<Box> {
-    const id = Date.now().toString();
-    const newBox: Box = {
+    const newBox = this.boxesRepository.create({
       ...createBoxDto,
-      id,
-      qrCode: '', // Initialize with an empty string
-    };
+      userId,
+      qrCode: '',
+    });
 
-    // Generate QR code after creating the full Box object
-    newBox.qrCode = await this.generateQRCode(newBox);
-
-    const userDataIndex = this.userData.findIndex(
-      (data) => data.userId === userId,
-    );
-    if (userDataIndex !== -1) {
-      this.userData[userDataIndex].boxes.push(newBox);
-    } else {
-      this.userData.push({ userId, boxes: [newBox] });
-    }
-
-    await this.saveUserData();
-    return newBox;
+    // Save first to get the generated UUID
+    const savedBox = await this.boxesRepository.save(newBox);
+    
+    // Generate QR code and update
+    savedBox.qrCode = await this.generateQRCode(savedBox);
+    return await this.boxesRepository.save(savedBox);
   }
 
   async update(
@@ -128,42 +86,20 @@ export class BoxesService {
     id: string,
     updateBoxDto: UpdateBoxDto,
   ): Promise<Box | undefined> {
-    const userDataIndex = this.userData.findIndex(
-      (data) => data.userId === userId,
-    );
-    if (userDataIndex !== -1) {
-      const boxIndex = this.userData[userDataIndex].boxes.findIndex(
-        (box) => box.id === id,
-      );
-      if (boxIndex !== -1) {
-        const updatedBox = {
-          ...this.userData[userDataIndex].boxes[boxIndex],
-          ...updateBoxDto,
-        };
-        updatedBox.qrCode = await this.generateQRCode(updatedBox);
-        this.userData[userDataIndex].boxes[boxIndex] = updatedBox;
-        await this.saveUserData();
-        return updatedBox;
-      }
+    const box = await this.findOne(userId, id);
+    if (!box) {
+      return undefined;
     }
-    return undefined;
+
+    Object.assign(box, updateBoxDto);
+    box.qrCode = await this.generateQRCode(box);
+    
+    return await this.boxesRepository.save(box);
   }
 
   async remove(userId: string, id: string): Promise<boolean> {
-    const userDataIndex = this.userData.findIndex(
-      (data) => data.userId === userId,
-    );
-    if (userDataIndex !== -1) {
-      const initialLength = this.userData[userDataIndex].boxes.length;
-      this.userData[userDataIndex].boxes = this.userData[
-        userDataIndex
-      ].boxes.filter((box) => box.id !== id);
-      if (this.userData[userDataIndex].boxes.length !== initialLength) {
-        await this.saveUserData();
-        return true;
-      }
-    }
-    return false;
+    const result = await this.boxesRepository.delete({ id, userId });
+    return result.affected > 0;
   }
 
   private async generateQRCode(box: Box): Promise<string> {

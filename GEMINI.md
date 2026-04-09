@@ -28,9 +28,9 @@ A NestJS-based system transitioning from a simple box tracker to a multi-locatio
 ## Roadmap & Evolution
 
 ### Phase 1: Architectural Foundations
-- [ ] Migrate from JSON file to SQLite with TypeORM to support relational data (Locations -> Containers -> Items).
-- [ ] Transition to `uuid` for more robust ID generation.
-- [ ] Enable `ValidationPipe` globally in `main.ts`.
+- [x] Migrate from JSON file to SQLite with TypeORM to support relational data (Locations -> Containers -> Items).
+- [x] Transition to `uuid` for more robust ID generation.
+- [x] Enable `ValidationPipe` globally in `main.ts`.
 - [ ] Add comprehensive unit tests for core services.
 
 ### Phase 2: Multi-Location & Hierarchy
