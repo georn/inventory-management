@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${PORT:-4500}:${PORT:-4500}"
+    volumes:
+      - ./data:/usr/src/app/data
+    env_file:
+      - .env
+    restart: always
